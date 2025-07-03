@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Die 99 Namen Allahs</title>
+  <style>
+    body {
+      font-family: 'Amiri', serif;
+      background: #f9f9f9;
+      padding: 20px;
+      text-align: center;
+    }
+    .toggleView {
+      margin: 10px;
+      padding: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #eee;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .navigation {
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 0 10px;
+      cursor: pointer;
+    }
+    table {
+      width: 90%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    th {
+      background: #eee;
+    }
+    #singleView .name-box {
+      margin-top: 30px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🕋 Die 99 Namen Allahs</h1>
+<div>
+  <span class="toggleView" onclick="showAll()">📋 Alle Namen anzeigen</span>
+  <span class="toggleView" onclick="showSingle()">🔄 Einzelansicht</span>
+</div>
+
+<!-- Einzelansicht -->
+<div id="singleView">
+  <div id="nameContainer" class="name-box"></div>
+  <div class="navigation">
+    <button id="prevBtn" onclick="prevName()">⬅️ Zurück</button>
+    <button id="nextBtn" onclick="nextName()">➡️ Weiter</button>
+  </div>
+</div>
+
+<!-- Tabellenansicht -->
+<div id="allView" style="display: none;">
+  <table id="nameTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>🕌 Arabisch</th>
+        <th>📖 Transkription</th>
+        <th>🧠 Bedeutung</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+let data = [];
+let currentIndex = parseInt(localStorage.getItem("nameIndex")) || 0;
+
+// JSON-Datei laden
+fetch("99names.json")
+  .then(res => res.json())
+  .then(json => {
+    data = json.data;
+    showSingle(); // Startansicht
+  });
+
+function renderSingle() {
+  if (!data.length) return;
+  const name = data[currentIndex];
+  document.getElementById("nameContainer").innerHTML = `
+    <h2 style="font-size: 48px;">${name.name}</h2>
+    <h3 style="font-size: 28px;">${name.transliteration}</h3>
+    <p><em>${name.en.meaning}</em></p>
+    <p><strong>Nummer:</strong> ${name.number}</p>
+  `;
+
+  // 🧠 Fortschritt speichern
+  localStorage.setItem("nameIndex", currentIndex);
+
+  // 🔄 Buttons anpassen
+  document.getElementById("prevBtn").style.display = (currentIndex === 0) ? "none" : "inline-block";
+  document.getElementById("nextBtn").style.display = (currentIndex === data.length - 1) ? "none" : "inline-block";
+}
+
+function renderAll() {
+  const tbody = document.querySelector("#nameTable tbody");
+  tbody.innerHTML = data.map(name => `
+    <tr>
+      <td>${name.number}</td>
+      <td>${name.name}</td>
+      <td>${name.transliteration}</td>
+      <td>${name.en.meaning}</td>
+    </tr>
+  `).join('');
+}
+
+function prevName() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    renderSingle();
+  }
+}
+
+function nextName() {
+  if (currentIndex < data.length - 1) {
+    currentIndex++;
+    renderSingle();
+  }
+}
+
+function showAll() {
+  document.getElementById("singleView").style.display = "none";
+  document.getElementById("allView").style.display = "block";
+  renderAll();
+}
+
+function showSingle() {
+  document.getElementById("allView").style.display = "none";
+  document.getElementById("singleView").style.display = "block";
+  renderSingle();
+}
+
+// Optional: neu zeichnen bei Tab-Rückkehr
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") renderSingle();
+});
+</script>
+
+</body>
+</html>
